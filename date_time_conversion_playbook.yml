@@ -1,0 +1,8 @@
+---
+- name: Dummy Date Time Conversion Playbook
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Print current date and time
+      ansible.builtin.debug:
+        msg: "Current date and time is {{ lookup('pipe', 'date') }}"
