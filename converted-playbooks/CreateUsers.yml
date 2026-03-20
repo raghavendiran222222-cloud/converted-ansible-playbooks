@@ -1,0 +1,20 @@
+---
+- name: Create Windows Users
+  hosts: windows
+  gather_facts: no
+  vars:
+    users:
+      - name: "User1"
+        password: "Password1"
+        groups: ["Administrators"]
+      - name: "User2"
+        password: "Password2"
+        groups: ["Users"]
+  tasks:
+    - name: Create local users
+      ansible.windows.win_user:
+        name: "{{ item.name }}"
+        password: "{{ item.password }}"
+        groups: "{{ item.groups }}"
+        state: present
+      loop: "{{ users }}"
