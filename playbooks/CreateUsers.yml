@@ -1,0 +1,27 @@
+---
+- name: Create two Windows users with current DateTime as password
+  hosts: all
+  gather_facts: no
+
+  vars:
+    password_plain: "{{ lookup('pipe', 'date /T && time /T') }}"
+    # Windows requires password in NT hash format. We'll use plaintext for demo, but production should use hashing.
+
+  tasks:
+    - name: Create UserOne
+      win_user:
+        name: UserOne
+        password: "{{ password_plain }}"
+        state: present
+      register: userone_result
+
+    - name: Create UserTwo
+      win_user:
+        name: UserTwo
+        password: "{{ password_plain }}"
+        state: present
+      register: usertwo_result
+
+    - name: Show creation result
+      debug:
+        msg: "Users UserOne and UserTwo have been created with password: {{ password_plain }}"
