@@ -1,0 +1,46 @@
+---
+- name: Gather system info and output to report file (single host)
+  hosts: all
+  gather_facts: yes
+  vars:
+    report_path: "{{ ansible_env.TEMP }}\system-report.txt"
+  tasks:
+    - name: Collect CPU info
+      win_shell: |
+        Get-CimInstance Win32_Processor | Select-Object Name, NumberOfCores, NumberOfLogicalProcessors
+      register: cpuinfo
+
+    - name: Collect OS info
+      win_shell: |
+        Get-CimInstance Win32_OperatingSystem | Select-Object Caption, Version, BuildNumber
+      register: osinfo
+
+    - name: Collect disk info
+      win_shell: |
+        Get-CimInstance Win32_LogicalDisk | Select-Object DeviceID, Size, FreeSpace
+      register: diskinfo
+
+    - name: Assemble system info report content
+      set_fact:
+        sys_report: |
+          OS Info:
+          {{ osinfo.stdout }}
+          
+          CPU Info:
+          {{ cpuinfo.stdout }}
+          
+          Disk Info:
+          {{ diskinfo.stdout }}
+
+    - name: Write report to file in temp directory
+      win_copy:
+        content: "{{ sys_report }}"
+        dest: "{{ report_path }}"
+
+    - name: Output report location
+      debug:
+        msg: "System report written to {{ report_path }}"
+
+    - name: Show system info report content
+      debug:
+        msg: "{{ sys_report }}"
