@@ -1,0 +1,40 @@
+---
+- name: File Cleanup Playbook
+  hosts: localhost
+  gather_facts: false
+  vars:
+    target_path: "{{ lookup('env', 'TEMP') | default('/tmp', true) }}"
+    days_old: 30
+
+  tasks:
+    - name: Find files older than days_old under target_path
+      find:
+        paths: "{{ target_path }}"
+        age: "{{ days_old }}d"
+        recurse: yes
+        file_type: file
+      register: found_files
+
+    - name: Print summary of found files
+      debug:
+        msg: |
+          Scanning: {{ target_path }}
+          Files older than {{ days_old }} days:
+            Found: {{ found_files.matched }} files
+            Total size: {{ (found_files.files | map(attribute='size') | list | sum | int / 1048576) | round(2) }} MB
+
+    - name: Delete old files
+      file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ found_files.files }}"
+      when: found_files.matched > 0
+
+    - name: Print cleanup done or skip message
+      debug:
+        msg: |
+          {% if found_files.matched > 0 %}
+            Cleanup complete.
+          {% else %}
+            Nothing to clean up.
+          {% endif %}
