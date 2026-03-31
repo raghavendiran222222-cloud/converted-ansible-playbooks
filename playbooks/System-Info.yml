@@ -1,0 +1,13 @@
+---
+- name: Gather System Information
+  hosts: all
+  gather_facts: yes
+  tasks:
+    - name: Display system information
+      debug:
+        msg:
+          - "Hostname: {{ ansible_hostname }}"
+          - "OS: {{ ansible_distribution }} {{ ansible_distribution_version }}"
+          - "CPU: {{ ansible_processor }}"
+          - "Memory: {{ ansible_memtotal_mb }} MB"
+          - "IP Address: {{ ansible_default_ipv4.address }}"
