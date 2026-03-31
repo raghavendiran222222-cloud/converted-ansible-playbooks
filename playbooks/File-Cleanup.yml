@@ -1,0 +1,25 @@
+---
+- name: File Cleanup Playbook
+  hosts: all
+  gather_facts: true
+  become: true
+
+  vars:
+    cleanup_path: "C:\\Temp"
+    file_pattern: "*.log"
+    days_old: 30
+
+  tasks:
+    - name: Find files older than {{ days_old }} days in {{ cleanup_path }}
+      win_find:
+        paths: "{{ cleanup_path }}"
+        patterns: "{{ file_pattern }}"
+        age: "{{ days_old }}d"
+      register: files_found
+
+    - name: Remove old files
+      win_file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ files_found.files }}"
+      when: files_found.files | length > 0
