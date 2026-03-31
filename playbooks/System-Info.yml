@@ -1,0 +1,36 @@
+---
+- name: Gather system information
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Get OS version
+      win_command: 'systeminfo | findstr /B /C:"OS Version"'
+      register: os_version
+
+    - name: Display OS version
+      debug:
+        var: os_version.stdout
+
+    - name: Get computer name
+      win_command: 'systeminfo | findstr /B /C:"Host Name"'
+      register: computer_name
+
+    - name: Display computer name
+      debug:
+        var: computer_name.stdout
+
+    - name: Get memory info
+      win_command: 'systeminfo | findstr /B /C:"Total Physical Memory"'
+      register: memory_info
+
+    - name: Display memory info
+      debug:
+        var: memory_info.stdout
+
+    - name: Get processor info
+      win_command: 'wmic cpu get name'
+      register: processor_info
+
+    - name: Display processor info
+      debug:
+        var: processor_info.stdout
