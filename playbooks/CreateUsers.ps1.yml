@@ -1,0 +1,17 @@
+---
+- name: Create Windows Users from PowerShell Script
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Ensure user 'exampleuser' exists
+      ansible.windows.win_user:
+        name: "{{ user_name }}"
+        password: "{{ user_password }}"
+        groups: "{{ user_groups }}"
+        state: present
+      vars:
+        user_name: exampleuser
+        user_password: "Password123!"
+        user_groups: ["Administrators"]
+      changed_when: false
+      check_mode: yes
