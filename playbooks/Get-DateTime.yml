@@ -1,0 +1,18 @@
+---
+- name: Get current date and time on Windows hosts
+  hosts: all
+  gather_facts: true
+  become: false
+
+  vars:
+    datetime_format: "yyyy-MM-dd HH:mm:ss"  # Default format, review as needed
+
+  tasks:
+    - name: Get current date and time
+      win_shell: |
+        Get-Date -Format "{{ datetime_format }}"
+      register: datetime_output
+
+    - name: Display date and time
+      debug:
+        msg: "Current date and time: {{ datetime_output.stdout }}"
