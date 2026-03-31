@@ -1,0 +1,61 @@
+---
+- name: Copy BGInfo Utility to Target Windows Hosts
+  hosts: all
+  gather_facts: true
+  become: true
+  become_method: runas
+  vars:
+    bginfo_source_path: "C:\Tools\BGInfo"
+    bginfo_dest_path: "C:\Program Files\BGInfo"
+    bginfo_exe: "BGInfo.exe"
+    bginfo_config: "BGInfo.bgi"
+    bginfo_shortcut: "BGInfo.lnk"
+    bginfo_user_profile: "C:\Users\Public\Desktop"
+  tasks:
+    - name: Ensure BGInfo destination directory exists
+      win_file:
+        path: "{{ bginfo_dest_path }}"
+        state: directory
+
+    - name: Copy BGInfo executable
+      win_copy:
+        src: "{{ bginfo_source_path }}\{{ bginfo_exe }}"
+        dest: "{{ bginfo_dest_path }}\{{ bginfo_exe }}"
+        force: yes
+
+    - name: Copy BGInfo configuration file
+      win_copy:
+        src: "{{ bginfo_source_path }}\{{ bginfo_config }}"
+        dest: "{{ bginfo_dest_path }}\{{ bginfo_config }}"
+        force: yes
+
+    - name: Copy BGInfo shortcut to Public Desktop
+      win_copy:
+        src: "{{ bginfo_source_path }}\{{ bginfo_shortcut }}"
+        dest: "{{ bginfo_user_profile }}\{{ bginfo_shortcut }}"
+        force: yes
+
+    - name: Run BGInfo with configuration
+      win_shell:
+        cmd: "{{ bginfo_dest_path }}\{{ bginfo_exe }} {{ bginfo_dest_path }}\{{ bginfo_config }} /silent /timer:0"
+        creates: "{{ bginfo_user_profile }}\{{ bginfo_shortcut }}"
+      args:
+        executable: cmd
+      register: bginfo_run
+
+    - name: Ensure BGInfo runs at logon (add to Startup)
+      win_shortcut:
+        src: "{{ bginfo_dest_path }}\{{ bginfo_exe }}"
+        dest: "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup\BGInfo.lnk"
+        arguments: "{{ bginfo_dest_path }}\{{ bginfo_config }} /silent /timer:0"
+        state: present
+
+    - name: Validate BGInfo installation
+      win_stat:
+        path: "{{ bginfo_dest_path }}\{{ bginfo_exe }}"
+      register: bginfo_stat
+
+    - name: Fail if BGInfo executable is missing
+      fail:
+        msg: "BGInfo.exe was not found in {{ bginfo_dest_path }}."
+      when: not bginfo_stat.stat.exists
