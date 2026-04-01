@@ -1,0 +1,17 @@
+---
+- name: Get current date and time on Windows
+  hosts: all
+  gather_facts: true
+  become: false
+
+  vars:
+    datetime_format: "%Y-%m-%d %H:%M:%S"  # Review and adjust as needed
+
+  tasks:
+    - name: Get current date and time
+      win_shell: '[System.DateTime]::Now.ToString("{{ datetime_format }}")'
+      register: datetime_output
+
+    - name: Display date and time
+      debug:
+        msg: "Current date and time: {{ datetime_output.stdout }}"
