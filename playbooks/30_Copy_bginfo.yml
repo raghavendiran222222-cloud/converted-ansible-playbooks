@@ -1,0 +1,28 @@
+---
+- name: Copy BGInfo Utility to target Windows hosts
+  hosts: all
+  gather_facts: true
+  become: false
+
+  vars:
+    bginfo_source_path: 'C:\\Tools\\BGInfo\\BGInfo.exe'   # Update as needed
+    bginfo_dest_path: 'C:\\Program Files\\BGInfo\\BGInfo.exe'  # Update as needed
+
+  tasks:
+    - name: Ensure destination directory exists
+      win_file:
+        path: "{{ bginfo_dest_path | dirname }}"
+        state: directory
+
+    - name: Copy BGInfo.exe to destination
+      win_copy:
+        src: "{{ bginfo_source_path }}"
+        dest: "{{ bginfo_dest_path }}"
+        remote_src: yes
+
+    - name: Set BGInfo.exe permissions
+      win_acl:
+        path: "{{ bginfo_dest_path }}"
+        user: 'Everyone'
+        permission: 'ReadAndExecute'
+        type: 'allow'
