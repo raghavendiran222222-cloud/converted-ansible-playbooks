@@ -1,0 +1,23 @@
+---
+- name: Gather Windows System Information
+  hosts: all
+  gather_facts: true
+  become: false
+
+  vars:
+    output_path: "C:\\Temp\\system_info.txt"
+
+  tasks:
+    - name: Ensure output directory exists
+      win_file:
+        path: "{{ output_path | dirname }}"
+        state: directory
+
+    - name: Gather system information
+      win_command: systeminfo
+      register: systeminfo_result
+
+    - name: Write system information to file
+      win_copy:
+        content: "{{ systeminfo_result.stdout }}"
+        dest: "{{ output_path }}"
