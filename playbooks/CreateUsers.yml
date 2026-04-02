@@ -1,0 +1,37 @@
+---
+- name: Create local Windows users from PowerShell script
+  hosts: all
+  gather_facts: true
+  become: yes
+
+  vars:
+    users:
+      - name: "User1"
+        password: "Password1"
+        description: "First user"
+      - name: "User2"
+        password: "Password2"
+        description: "Second user"
+    # TODO: Replace above with actual user data from your environment
+
+  tasks:
+    - name: Ensure users exist
+      win_user:
+        name: "{{ item.name }}"
+        password: "{{ item.password }}"
+        description: "{{ item.description }}"
+        state: present
+        password_never_expires: yes
+        account_disabled: no
+      loop: "{{ users }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Add users to 'Users' group
+      win_group_membership:
+        name: "Users"
+        members: "{{ item.name }}"
+        state: present
+      loop: "{{ users }}"
+      loop_control:
+        label: "{{ item.name }}"
