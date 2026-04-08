@@ -1,0 +1,14 @@
+---
+galaxy_info:
+  author: Xylem
+  description: Windows Firewall configuration - logging and rule management
+  min_ansible_version: "2.14"
+  platforms:
+    - name: Windows
+      versions:
+        - "2019"
+        - "2022"
+        - "2025"
+dependencies:
+  - ansible.windows
+  - community.windows

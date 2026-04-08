@@ -1,0 +1,14 @@
+---
+galaxy_info:
+  author: Xylem
+  description: Base Windows Server configuration (Network Wizard, ServerManager, power plan, IE, RDP, locale, timezone)
+  min_ansible_version: "2.14"
+  platforms:
+    - name: Windows
+      versions:
+        - "2019"
+        - "2022"
+        - "2025"
+dependencies:
+  - ansible.windows
+  - community.windows

@@ -1,0 +1,22 @@
+---
+- name: Validate that target host is Windows
+  ansible.builtin.assert:
+    that:
+      - ansible_os_family == "Windows"
+    fail_msg: "This role only supports Windows hosts (detected: {{ ansible_os_family }})"
+    success_msg: "Target host is Windows - proceeding with firewall configuration"
+
+- name: Enable firewall logging for blocked connections
+  ansible.windows.win_shell: |
+    Set-NetFirewallProfile -LogBlocked True -All
+  when: win_firewall_config_log_blocked | bool
+
+- name: Enable firewall rules
+  community.windows.win_firewall_rule:
+    name: "{{ item.name }}"
+    enabled: "{{ item.enabled }}"
+    profiles: "{{ item.profile if item.profile is not none else omit }}"
+  loop: "{{ win_firewall_config_rules }}"
+  loop_control:
+    label: "{{ item.name }}"
+  failed_when: false

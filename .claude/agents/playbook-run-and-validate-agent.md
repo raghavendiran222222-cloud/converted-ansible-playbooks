@@ -20,8 +20,8 @@ Create an AAP Project, Job Template, and execute the playbook against a test inv
 
 ## Execution Flow
 
-1. 🛑 **Gate 1 (Step 1):** User provides and confirms inputs → Steps 2–6 run automatically.
-2. 🛑 **Gate 2 (Step 6):** User reviews execution results.
+1. **Gate 1 (Step 1):** User provides and confirms inputs → Steps 2–6 run automatically.
+2. **Gate 2 (Step 6):** User reviews execution results.
 
 ---
 
@@ -42,7 +42,7 @@ Create an AAP Project, Job Template, and execute the playbook against a test inv
 > 8. **Organization ID** (default: 1)
 > 9. **Execution Environment ID** (default: 2)
 
-### Step 1: Validate & Confirm (🛑 Gate 1)
+### Step 1: Validate & Confirm (Gate 1)
 
 * Validate all inputs are present. If missing, ask.
 * Generate a project name: `{script_name}-conversion-project` (e.g., `Get-DateTime-conversion-project`).
@@ -50,7 +50,7 @@ Create an AAP Project, Job Template, and execute the playbook against a test inv
 * Display all inputs and generated names. Wait for user confirmation.
 * Store all values — they persist across all steps. Never re-ask.
 
-### ⚡ Steps 2–6 run automatically
+###  Steps 2–6 run automatically
 
 ### Step 2: Verify Playbook Exists in Branch
 
@@ -101,7 +101,7 @@ AAP triggers a project sync automatically after creation. You must wait for it:
   * Host summaries (ok/changed/failed/skipped per host).
 * Store `job_status` and all results.
 
-### Step 6: Display Results (🛑 Gate 2)
+### Step 6: Display Results (Gate 2)
 
 Display a single summary:
 

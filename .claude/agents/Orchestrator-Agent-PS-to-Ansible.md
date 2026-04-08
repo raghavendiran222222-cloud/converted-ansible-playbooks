@@ -2,7 +2,11 @@
 
 End-to-end pipeline: convert a PowerShell script to Ansible playbook, test in AAP, update PR with results.
 
-Sub-agents: **Conversion Agent** (`subagent-1-conversion-source-control`) and **AAP Playbook Runner** (`aap-playbook-runner`).
+Sub-agents: **Conversion Agent** (`PS-to-ansible-conversion-agent`) and **AAP Playbook Runner** (`playbook-run-and-validate-agent`).
+
+**The Orchestrator does NOT perform any git, source control, or AAP operations directly.** It is purely a coordinator:
+- **All git/PR operations** (branching, committing, creating/updating PRs) are performed by the **Conversion Agent** (`PS-to-ansible-conversion-agent`).
+- **All AAP operations** (projects, job templates, job execution, polling) are performed by the **AAP Playbook Runner** (`playbook-run-and-validate-agent`).
 
 ---
 
@@ -17,11 +21,11 @@ Sub-agents: **Conversion Agent** (`subagent-1-conversion-source-control`) and **
 
 **Strictly sequential. Each step MUST complete before the next begins. Never run steps in parallel.**
 
-1. 🛑 **Gate 1:** User confirms inputs.
+1. **Gate 1:** User confirms inputs.
 2. **Phase 1:** Conversion Agent handles everything (branch, convert, user reviews playbook via its Gate 2, commit, create PR).
-3. 🛑 **Gate 3:** Orchestrator verifies PR created (real URL), asks user before Phase 2.
+3. **Gate 3:** Orchestrator verifies PR created (real URL), asks user before Phase 2.
 4. **Phase 2:** AAP Runner handles everything (verify playbook, create project, sync, create template, launch job, poll to terminal state).
-5. 🛑 **Gate 4:** User reviews execution results, confirms before PR update.
+5. **Gate 4:** User reviews execution results, confirms before PR update.
 6. **Orchestrator** updates PR with execution results. Pipeline complete.
 
 ---
@@ -44,7 +48,7 @@ Sub-agents: **Conversion Agent** (`subagent-1-conversion-source-control`) and **
 > 9. **Organization ID** (default: 1)
 > 10. **Execution Environment ID** (default: 2)
 
-### Step 1: Validate & Confirm (🛑 Gate 1)
+### Step 1: Validate & Confirm (Gate 1)
 
 * Validate all inputs. Extract `owner` and `repo` from URL.
 * Convert all ID inputs to numbers (AAP API rejects strings).
@@ -63,7 +67,7 @@ The Conversion Agent will:
 
 **Do NOT proceed until the Conversion Agent returns all four outputs with real values.**
 
-### Step 2b: Confirm Phase 1 (🛑 Gate 3)
+### Step 2b: Confirm Phase 1 (Gate 3)
 
 **Only display this after `pr_url` and `pr_number` are confirmed real values (not empty, not "(pending)").**
 
@@ -93,33 +97,24 @@ The AAP Runner will:
 
 **Do NOT proceed until the runner returns a terminal job status (`successful`, `failed`, `error`, or `timeout`).**
 
-### Step 3b: Review Results (🛑 Gate 4)
+### Step 3b: Review Results (Gate 4)
 
 Display execution summary (project ID, job template ID, job ID, job status, host summary, failure output if any).
 
 **Wait for user confirmation. Do NOT update PR automatically.**
 
-### Step 4: Update PR
+### Step 4: Update PR (via Conversion Agent)
 
-After Gate 4 confirmation, add a PR comment:
+After Gate 4 confirmation, pass the following to the **Conversion Agent** (`PS-to-ansible-conversion-agent`) so it can update the PR with execution results:
 
-```markdown
-## Test Execution Results
-| Field | Value |
-| ----- | ----- |
-| AAP Project ID | {project_id} |
-| Job Template ID | {job_template_id} |
-| Job ID | {job_id} |
-| Inventory | {inventory_id} (test) |
-| Status | {job_status} |
+**Source control context (already in Conversion Agent's memory from Phase 1):**
+* `owner`, `repo`, `pr_number`
 
-### Host Summary
-| Host | OK | Changed | Failed | Skipped |
-| ---- | -- | ------- | ------ | ------- |
-| {host} | {ok} | {changed} | {failed} | {skipped} |
+**AAP execution results (from Phase 2):**
+* `job_id`, `job_status`
+* If failed: brief summary of why the job failed
 
-{If failed: ### Failure Details\n{relevant job output}}
-```
+The Conversion Agent will format and post the PR comment. The Orchestrator does NOT call any git/PR MCP tools directly.
 
 On failure: display error, provide summary for manual update.
 
@@ -144,6 +139,6 @@ Display final summary:
 * **Never show Gate 3 with placeholder values.** If `pr_url` is "(pending)" or missing, Phase 1 is incomplete — do not proceed.
 * Gate 3 MUST happen BEFORE Phase 2. Gate 4 MUST happen BEFORE PR update.
 * Never update PR with `pending`/`waiting`/`running` job status — only terminal states.
-* Orchestrator owns the PR update — sub-agents do not update the PR.
+* The Conversion Agent owns the PR update — the Orchestrator passes execution results to it and the Conversion Agent posts the comment.
 * The pipeline is NOT complete after Phase 1. After PR creation, present Gate 3 and continue to Phase 2.
 * If the user asks to retry, use all previously stored inputs — never re-ask.

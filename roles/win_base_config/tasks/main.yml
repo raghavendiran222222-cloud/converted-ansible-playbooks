@@ -1,0 +1,108 @@
+---
+# Pre-flight check
+- name: Verify target is a Windows host
+  ansible.builtin.assert:
+    that:
+      - ansible_os_family == "Windows"
+    fail_msg: "This role only supports Windows hosts (detected: {{ ansible_os_family }})"
+    success_msg: "Windows host confirmed"
+
+# Disable Network Location Wizard
+- name: Disable Network Location Wizard
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Control\Network\NewNetworkWindowOff
+    state: present
+  when: win_base_config_disable_network_location_wizard
+
+# Disable ServerManager autostart
+- name: Disable ServerManager scheduled task
+  community.windows.win_scheduled_task:
+    name: ServerManager
+    path: \Microsoft\Windows\Server Manager
+    enabled: false
+  when: win_base_config_disable_server_manager
+
+# Set power plan to High Performance
+- name: Set power plan to High Performance
+  ansible.windows.win_shell: |
+    $p = Get-CimInstance -Name root\cimv2\power -Class win32_PowerPlan -Filter "ElementName = 'High Performance'"
+    $guid = ([string]$p.InstanceID).Replace("Microsoft:PowerPlan\{","").Replace("}","")
+    powercfg.exe /setactive $guid
+  when: win_base_config_set_high_performance_power
+  changed_when: true
+
+# Set IE Start Page
+- name: Set IE Start Page
+  ansible.windows.win_regedit:
+    path: HKLM:\Software\Microsoft\Internet Explorer\Main
+    name: Start Page
+    data: "{{ win_base_config_ie_start_page }}"
+    type: string
+
+# Disable IE First Run Wizard
+- name: Disable IE First Run Wizard
+  ansible.windows.win_regedit:
+    path: HKLM:\Software\Microsoft\Internet Explorer\Main
+    name: DisableFirstRunCustomize
+    data: 1
+    type: dword
+  when: win_base_config_disable_ie_wizard
+
+# Disable Action Center - Notification Center
+- name: Disable Action Center - DisableNotificationCenter
+  ansible.windows.win_regedit:
+    path: HKLM:\Software\Policies\Microsoft\Windows\Explorer
+    name: DisableNotificationCenter
+    data: 1
+    type: dword
+  when: win_base_config_disable_action_center
+
+# Disable Action Center - Toast Notifications
+- name: Disable Action Center - ToastEnabled
+  ansible.windows.win_regedit:
+    path: HKLM:\Software\Microsoft\Windows\CurrentVersion\PushNotifications
+    name: ToastEnabled
+    data: 0
+    type: dword
+  when: win_base_config_disable_action_center
+
+# Enable RDP
+- name: Enable Remote Desktop (RDP)
+  ansible.windows.win_regedit:
+    path: HKLM:\System\CurrentControlSet\Control\Terminal Server
+    name: fDenyTSConnections
+    data: 0
+    type: dword
+  when: win_base_config_enable_rdp
+
+# Move Start menu to left (Windows Server 2025 only)
+- name: Move Start menu to left alignment (2025 only)
+  ansible.windows.win_regedit:
+    path: HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced
+    name: TaskbarAl
+    data: 0
+    type: dword
+  when:
+    - win_base_config_move_start_to_left
+    - win_base_config_os_version == "2025"
+
+# Set keyboard languages
+- name: Set keyboard languages
+  ansible.windows.win_shell: |
+    $langList = New-WinUserLanguageList "{{ win_base_config_languages[0] }}"
+    {% for lang in win_base_config_languages[1:] %}
+    $langList.Add("{{ lang }}")
+    {% endfor %}
+    Set-WinUserLanguageList $langList -Force
+  changed_when: true
+
+# Set system culture
+- name: Set system culture
+  ansible.windows.win_shell: |
+    Set-Culture "{{ win_base_config_culture }}"
+  changed_when: true
+
+# Set timezone
+- name: Set timezone
+  community.windows.win_timezone:
+    timezone: "{{ win_base_config_timezone }}"

@@ -1,0 +1,26 @@
+---
+# Timezone setting
+win_base_config_timezone: "W. Europe Standard Time"
+
+# Locale/Culture
+win_base_config_culture: "sv-SE"
+
+# Keyboard languages to add
+win_base_config_languages:
+  - "sv-SE"
+  - "en-US"
+
+# IE configuration
+win_base_config_ie_start_page: "about:blank"
+
+# Feature toggles
+win_base_config_enable_rdp: true
+win_base_config_disable_action_center: true
+win_base_config_disable_server_manager: true
+win_base_config_disable_network_location_wizard: true
+win_base_config_disable_ie_wizard: true
+win_base_config_set_high_performance_power: true
+win_base_config_move_start_to_left: false
+
+# OS version for version-specific behavior
+win_base_config_os_version: "2025"

@@ -1,0 +1,21 @@
+---
+# Enable firewall logging for blocked connections
+win_firewall_config_log_blocked: true
+
+# Firewall rules to enable
+win_firewall_config_rules:
+  - name: "COM+ Network Access (DCOM-In)"
+    enabled: true
+    profile: null
+  - name: "Virtual Machine Monitoring (Echo Request - ICMPv4-In)"
+    enabled: true
+    profile: null
+  - name: "File and Printer Sharing (SMB-In)"
+    enabled: true
+    profile: Any
+  - name: "Windows Management Instrumentation (WMI-In)"
+    enabled: true
+    profile: Any
+  - name: "Remote Desktop - User Mode (TCP-In)"
+    enabled: true
+    profile: Any

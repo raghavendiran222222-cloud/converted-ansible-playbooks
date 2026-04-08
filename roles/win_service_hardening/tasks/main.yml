@@ -1,0 +1,47 @@
+---
+- name: Validate that target host is Windows
+  ansible.builtin.assert:
+    that:
+      - ansible_os_family == "Windows"
+    fail_msg: "This role only supports Windows hosts (detected: {{ ansible_os_family }})"
+    success_msg: "Target host confirmed as Windows"
+
+- name: Disable and stop unnecessary Windows services
+  ansible.windows.win_service:
+    name: "{{ item }}"
+    start_mode: disabled
+    state: stopped
+  loop: "{{ win_service_hardening_services }}"
+  failed_when: false
+  register: win_service_hardening_results
+
+- name: Disable locked services via registry
+  ansible.windows.win_regedit:
+    path: "HKLM:\\SYSTEM\\CurrentControlSet\\Services\\{{ item }}"
+    name: Start
+    data: 4
+    type: dword
+  loop: "{{ win_service_hardening_registry_services }}"
+  register: win_service_hardening_registry_results
+
+- name: Report services disabled via win_service
+  ansible.builtin.debug:
+    msg: >-
+      Successfully disabled services:
+      {{ win_service_hardening_results.results
+         | selectattr('changed', 'equalto', true)
+         | map(attribute='item')
+         | list }}.
+      Skipped or not found:
+      {{ win_service_hardening_results.results
+         | rejectattr('changed', 'equalto', true)
+         | map(attribute='item')
+         | list }}.
+
+- name: Report services disabled via registry
+  ansible.builtin.debug:
+    msg: >-
+      Registry-disabled services:
+      {{ win_service_hardening_registry_results.results
+         | map(attribute='item')
+         | list }}

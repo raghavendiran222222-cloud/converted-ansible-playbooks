@@ -1,0 +1,43 @@
+---
+# Services to disable via win_service module
+win_service_hardening_services:
+  - AxInstSV
+  - bthserv
+  - CDPUserSvc
+  - CDPSvc
+  - PimIndexMaintenancesvc
+  - MapsBroker
+  - lfsvc
+  - SharedAccess
+  - lltdsvc
+  - wlidsvc
+  - NcbService
+  - PhoneSvc
+  - PcaSvc
+  - QWAVE
+  - SensorDataService
+  - SensrSvc
+  - SensorService
+  - ShellHWDetection
+  - SSDPSRV
+  - WiaRpc
+  - TabletInputService
+  - upnphost
+  - UserDataSvc
+  - UnistoreSvc
+  - WalletService
+  - Audiosrv
+  - AudioEndpointBuilder
+  - FrameServer
+  - stisvc
+  - wisvc
+  - icssvc
+  - WpnService
+  - WpnUserService
+
+# Locked services that must be disabled via registry
+win_service_hardening_registry_services:
+  - ScDeviceEnum
+  - RmSvc
+  - NgcCtnrSvc
+  - NgcSvc

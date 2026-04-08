@@ -1,1 +1,11 @@
 PS-Scripts/xy-PS-scripts
+.dev-plans/
+
+# Skeleton roles (not yet implemented)
+roles/win_wsus_config/
+roles/win_install_bigfix/
+roles/win_install_ars/
+roles/win_install_ps7/
+roles/win_defender_onboard/
+roles/win_disk_setup/
+.claude/.DS_Store
