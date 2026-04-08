@@ -58,6 +58,7 @@ Display all inputs. Wait for user confirmation.
 2. **Windows Modules Reference document** — look up the correct Ansible module for each PowerShell cmdlet. Do NOT guess module names — verify against the KB.
 
 **Conversion rules:**
+* **Check for reusable roles first.** Before converting, read the `roles/` directory in the repo using **get_file_contents** with path `roles/`. For each role found, read its `README.md` and `defaults/main.yml` to understand what it does and its variables. If the PS script's logic matches a role, use that role in the playbook instead of writing inline tasks. Only write inline tasks for logic NOT covered by a role.
 * Use FQCNs for all modules (e.g., `ansible.windows.win_copy`, not `win_copy`).
 * Only fall back to `win_shell`/`win_command` when no dedicated module exists — comment why.
 * Follow all structural, idempotency, variable, and error handling patterns from the KB best practices document.
