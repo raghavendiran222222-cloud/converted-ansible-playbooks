@@ -1,0 +1,24 @@
+---
+- name: Test playbook with intentional error
+  hosts: localhost
+  connection: local
+  gather_facts: true
+
+  vars:
+    greeting: "Hello from Ansible"
+    output_file: /tmp/ansible-test-output.txt
+
+  tasks:
+    - name: Display greeting message
+      ansible.builtin.debug:
+        msg: "{{ greeting }}"
+
+    - name: Get current date
+      ansible.builtin.commnd:
+        cmd: date
+      register: date_result
+
+    - name: Write output to file
+      ansible.builtin.copy:
+        content: "{{ greeting }} - ran at {{ date_result.stdout }}"
+        dest: "{{ output_file }}"

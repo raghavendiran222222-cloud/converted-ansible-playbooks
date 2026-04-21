@@ -48,21 +48,34 @@ Display all inputs. Wait for user confirmation.
 
 * Call **get_file_contents** with `owner`, `repo`, `path`, `ref` = `refs/heads/{source_branch}`.
 * **Must** use full ref format `refs/heads/{branch}`. On failure: display error, stop.
+* The response contains a status line (e.g., `successfully downloaded text file (SHA: ...)`) followed by the file content as plain text. The script content is everything after the status line.
+* **Validate the response contains actual PowerShell code** (cmdlets, variables, logic). If no code is found — do NOT proceed. Display the raw response and ask the user to verify. Never guess or infer script content from the filename.
+* **Display the full script to the user** before proceeding to conversion. Show the complete PowerShell code in a code block so the user can confirm it was read correctly.
 
 ### Step 4: Convert to Ansible Playbook
 
-**Generate full playbook YAML immediately.**
+**First, analyze the PS script** — identify what it does (its intent), the cmdlets used, and the data flow. Then convert.
 
-**Before converting, consult the Knowledge Base (KB):**
-1. **Ansible Best Practices document** — follow all KB guidance for playbook structure, task design, idempotency, variables, error handling, and module usage.
-2. **Windows Modules Reference document** — look up the correct Ansible module for each PowerShell cmdlet. Do NOT guess module names — verify against the KB.
+**Consult the Knowledge Base (KB) for module lookups and best practices:**
+1. **Windows Modules Reference** — verify the correct Ansible module for each PowerShell cmdlet. Do NOT guess module names.
+2. **Ansible Best Practices** — follow KB guidance for playbook structure, idempotency, and error handling.
 
 **Conversion rules:**
-* **Check for reusable roles first.** Before converting, read the `roles/` directory in the repo using **get_file_contents** with path `roles/`. For each role found, read its `README.md` and `defaults/main.yml` to understand what it does and its variables. If the PS script's logic matches a role, use that role in the playbook instead of writing inline tasks. Only write inline tasks for logic NOT covered by a role.
 * Use FQCNs for all modules (e.g., `ansible.windows.win_copy`, not `win_copy`).
+* Prefer native Ansible modules over `win_shell`/`win_command`. Common mappings:
+  - `Get-Service` / `Set-Service` → `ansible.windows.win_service` or `ansible.windows.win_service_info`
+  - `Set-ItemProperty` (registry) → `ansible.windows.win_regedit`
+  - `Copy-Item` → `ansible.windows.win_copy`
+  - `Install-WindowsFeature` → `ansible.windows.win_feature`
+  - `Get-ScheduledTask` → `community.windows.win_scheduled_task`
+  - `Set-NetFirewallRule` → `community.windows.win_firewall_rule`
+  - `Set-TimeZone` → `community.windows.win_timezone`
+* Use `set_fact` with Jinja filters for data manipulation instead of `win_shell` with PowerShell logic.
 * Only fall back to `win_shell`/`win_command` when no dedicated module exists — comment why.
-* Follow all structural, idempotency, variable, and error handling patterns from the KB best practices document.
+* Extract hardcoded values into `vars:` so they can be overridden.
 * YAML must be well-formed and lint-clean.
+
+**Roles:** Check if the repo has a `roles/` directory using **get_file_contents**. If roles exist, read each role's `tasks/main.yml` to understand what it does. Only use a role when the PS script's **purpose and operations** genuinely match — do not match on keywords alone. When in doubt, write inline tasks.
 
 **Output path:** `playbooks/{scriptname}.yml`
 
