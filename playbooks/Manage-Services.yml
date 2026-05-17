@@ -1,0 +1,39 @@
+---
+- name: Manage Windows Services
+  hosts: windows
+  gather_facts: false
+  vars:
+    service_name: "{{ service_name | default('Spooler') }}"
+    top_n: 5
+  tasks:
+    - name: Get all running services
+      ansible.windows.win_service_info:
+        state: running
+      register: running_services
+
+    - name: Display total running services
+      debug:
+        msg: "Total running services: {{ running_services.services | length }}"
+
+    - name: Display top N running services
+      debug:
+        msg: |
+          Top {{ top_n }} Running Services:
+          {% for svc in running_services.services[:top_n] %}
+            - {{ svc.display_name }} [{{ svc.name }}]
+          {% endfor %}
+
+    - name: Restart specified service
+      ansible.windows.win_service:
+        name: "{{ service_name }}"
+        state: restarted
+        force: true
+
+    - name: Get status of specified service
+      ansible.windows.win_service_info:
+        name: "{{ service_name }}"
+      register: svc_status
+
+    - name: Display status of specified service
+      debug:
+        msg: "Service '{{ service_name }}' status: {{ svc_status.services[0].status }}"
